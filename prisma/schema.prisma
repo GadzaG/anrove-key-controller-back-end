@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String             @id @default(cuid())
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt() @map("updated_at")
+  name              String             @unique
+  email             String             @unique
+  password          String
+  role              Role               @default(USER)
+  userSubscriptions UserSubscription[]
+  products          Product[]
+  globals           Global[]
+
+  @@map("user")
+}
+
+model UserSubscription {
+  id             String       @id @default(cuid())
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt() @map("updated_at")
+  userID         String       @map("user_id")
+  subscriptionID String       @map("subscription_id")
+  User           User         @relation(fields: [userID], references: [id])
+  Subscription   Subscription @relation(fields: [subscriptionID], references: [id])
+  status         Boolean
+
+  @@map("user_subscription")
+}
+
+model Subscription {
+  id               String             @id @default(cuid())
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt() @map("updated_at")
+  type             String             @unique
+  UserSubscription UserSubscription[]
+
+  @@map("subscription")
+}
+
+model Product {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt() @map("updated_at")
+  userID    String   @map("user_id")
+  name      String
+  User      User     @relation(fields: [userID], references: [id])
+  Key       Key[]
+
+  @@map("product")
+}
+
+model Key {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt() @map("updated_at")
+  productID String   @map("product_id")
+  key       String   @unique
+  Product   Product  @relation(fields: [productID], references: [id])
+
+  @@map("key")
+}
+
+model Global {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt() @map("updated_at")
+  userID    String   @map("user_id")
+  varName   String   @map("var_name")
+  varType   String   @map("var_type")
+  User      User     @relation(fields: [userID], references: [id])
+
+  @@map("global")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
