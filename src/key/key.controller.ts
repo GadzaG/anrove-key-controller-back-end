@@ -1,6 +1,7 @@
 import {
 	Body,
 	Controller,
+	Delete,
 	Get,
 	HttpCode,
 	Param,
@@ -27,13 +28,22 @@ export class KeyController {
 		return this.keyService.getAll(userID, productID)
 	}
 
+	@Delete()
+	@Auth()
 	delete() {}
 
 	@UsePipes(new ValidationPipe())
 	@HttpCode(200)
-	@Post('create/:productID')
+	@Post('create')
 	@Auth()
-	async create(@Body() dto: KeyDto, @Param('productID') productID: string) {
-		return this.keyService.create(dto, productID)
+	async create(@Body() dto: KeyDto) {
+		return this.keyService.create(dto)
+	}
+
+	@UsePipes(new ValidationPipe())
+	@HttpCode(200)
+	@Post('key-check/:key')
+	async keyCheck(@Param('key') key: string) {
+		return this.keyService.keyCheck(key)
 	}
 }

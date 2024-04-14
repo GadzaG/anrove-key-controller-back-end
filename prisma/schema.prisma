@@ -64,9 +64,10 @@ model Key {
   updatedAt DateTime  @updatedAt() @map("updated_at")
   productID String    @map("product_id")
   key       String    @unique
-  status    Boolean   @default(true)
+  status    KeyStatus @default(FREE)
   startAt   DateTime? @map("start_at")
   endAt     DateTime? @map("end_at")
+  data      Json?
 
   Product Product @relation(fields: [productID], references: [id])
 
@@ -88,4 +89,9 @@ model Global {
 enum Role {
   USER
   ADMIN
+}
+
+enum KeyStatus {
+  FREE
+  BUSY
 }

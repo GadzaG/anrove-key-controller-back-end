@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { BadRequestException, Injectable } from '@nestjs/common'
 import { PrismaService } from 'src/prisma.service'
 import { KeyDto } from './key.dto'
 
@@ -27,16 +27,43 @@ export class KeyService {
 		return result
 	}
 
-	async create(keyDto: KeyDto, productID) {
-		return this.prisma.key.create({
-			data: {
-				key: this.randomString(16),
-				Product: {
-					connect: {
-						id: productID
-					}
-				}
+	async create(keyDto: KeyDto) {
+		try {
+			let newKeys = null
+			let newkeysList: Object[]
+			for (let i: number = 0; i < keyDto.keyCount; i++) {
+				newkeysList.push(
+					(newKeys = await this.prisma.key.create({
+						data: {
+							key: this.randomString(16),
+							Product: {
+								connect: {
+									id: keyDto.productID
+								}
+							}
+						}
+					}))
+				)
+				console.log(newkeysList)
+				if (!newKeys) throw new BadRequestException('erorororororor')
+			}
+			return newKeys
+		} catch (e) {
+			console.log(e)
+		}
+	}
+
+	async keyCheck(key: string) {
+		const keyData = this.prisma.key.findUnique({
+			where: {
+				key
 			}
 		})
+
+		if (keyData) {
+			return keyData
+		} else {
+			return 'key not found'
+		}
 	}
 }
