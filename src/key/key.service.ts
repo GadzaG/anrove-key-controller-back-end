@@ -6,7 +6,7 @@ import { KeyDto } from './key.dto'
 export class KeyService {
 	constructor(private prisma: PrismaService) {}
 
-	async getAll(userID: string, productID: string) {
+	async getAll(productID: string) {
 		return this.prisma.key.findMany({
 			where: {
 				Product: { id: productID }

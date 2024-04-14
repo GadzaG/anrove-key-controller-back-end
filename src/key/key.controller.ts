@@ -10,7 +10,6 @@ import {
 	ValidationPipe
 } from '@nestjs/common'
 import { Auth } from 'src/auth/decorators/auth.decorator'
-import { CurrentUser } from 'src/auth/decorators/user.decorator'
 import { KeyDto } from './key.dto'
 import { KeyService } from './key.service'
 
@@ -18,21 +17,16 @@ import { KeyService } from './key.service'
 export class KeyController {
 	constructor(private readonly keyService: KeyService) {}
 
-	@HttpCode(200)
 	@Get('get-all/:productID')
 	@Auth()
-	async getAll(
-		@CurrentUser('id') userID: string,
-		@Param('productID') productID: string
-	) {
-		return this.keyService.getAll(userID, productID)
+	async getAll(@Param('productID') productID: string) {
+		return this.keyService.getAll(productID)
 	}
 
 	@Delete()
 	@Auth()
 	delete() {}
 
-	@UsePipes(new ValidationPipe())
 	@HttpCode(200)
 	@Post('create')
 	@Auth()

@@ -32,7 +32,6 @@ export class ProductController {
 		return this.productService.create(dto, userID)
 	}
 
-	@HttpCode(200)
 	@Delete(':id')
 	@Auth()
 	async delete(@Param('id') id: string) {
