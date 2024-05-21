@@ -2,10 +2,17 @@ import { Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from 'src/prisma.service'
 import { GlobalAPIDto, GlobalDto } from './global.dto'
 
+interface IExistingGlobals {
+	id: string
+	varName: string
+	optional: boolean
+}
+
 @Injectable()
 export class GlobalService {
 	constructor(private prisma: PrismaService) {}
 
+	// GET
 	async getGlobal({ userID, varName }: GlobalAPIDto) {
 		const result = await this.prisma.global.findMany({
 			where: {
@@ -32,19 +39,9 @@ export class GlobalService {
 		return result
 	}
 
+	// POST | PUT
 	async createGlobal({ varName, varData }: GlobalDto, id: string) {
-		const existingGlobal = await this.prisma.global.findFirst({
-			where: {
-				userID: id,
-				varName: varName
-			}
-		})
-
-		if (existingGlobal) {
-			throw new NotFoundException(
-				`varName ${varName} already exists for user ${id}`
-			)
-		}
+		await this.existingGlobals({ id, varName, optional: true })
 
 		const newGlobal = await this.prisma.global.create({
 			data: {
@@ -62,16 +59,11 @@ export class GlobalService {
 	}
 
 	async changeGlobal({ varName, varData }: GlobalDto, id: string) {
-		const existingGlobal = await this.prisma.global.findFirst({
-			where: {
-				userID: id,
-				varName: varName
-			}
+		const existingGlobal = await this.existingGlobals({
+			id,
+			varName,
+			optional: false
 		})
-
-		if (!existingGlobal) {
-			throw new NotFoundException(`varName ${varName} not found for user ${id}`)
-		}
 
 		const updatedGlobal = await this.prisma.global.update({
 			where: {
@@ -85,6 +77,7 @@ export class GlobalService {
 		return updatedGlobal
 	}
 
+	// DELETE
 	async deleteGlobal({ varName }: Pick<GlobalDto, 'varName'>, id: string) {
 		const existingGlobal = await this.prisma.global.findFirst({
 			where: {
@@ -104,5 +97,21 @@ export class GlobalService {
 		})
 
 		return deletedGlobal
+	}
+
+	// TOOLS
+	async existingGlobals({ id, optional, varName }: IExistingGlobals) {
+		const existingGlobal = await this.prisma.global.findFirst({
+			where: {
+				userID: id,
+				varName: varName
+			}
+		})
+		if (optional ? existingGlobal : !existingGlobal) {
+			throw new NotFoundException(
+				`varName ${varName} already exists for user ${id}`
+			)
+		}
+		return existingGlobal
 	}
 }

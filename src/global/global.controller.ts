@@ -34,7 +34,7 @@ export class GlobalController {
 	@Delete('delete-global')
 	@Auth()
 	async deleteGlobal(@Body() dto: GlobalDto, @CurrentUser('id') id: string) {
-		const result = await this.globalService.deleteGlobal(dto, id)
+		await this.globalService.deleteGlobal(dto, id)
 		return
 	}
 }

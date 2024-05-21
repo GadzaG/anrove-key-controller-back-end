@@ -5,9 +5,7 @@ import {
 	Get,
 	HttpCode,
 	Param,
-	Post,
-	UsePipes,
-	ValidationPipe
+	Post
 } from '@nestjs/common'
 import { Auth } from 'src/auth/decorators/auth.decorator'
 import { KeyDto } from './key.dto'
@@ -20,26 +18,25 @@ export class KeyController {
 	@Get('get-all/:productID')
 	@Auth()
 	async getAll(@Param('productID') productID: string) {
-		return this.keyService.getAll(productID)
+		return await this.keyService.getAll(productID)
 	}
 
 	@Delete('delete')
 	@Auth()
 	async delete() {
-		return this.keyService.delete()
+		return await this.keyService.delete()
 	}
 
 	@HttpCode(200)
 	@Post('create')
 	@Auth()
 	async create(@Body() dto: KeyDto) {
-		return this.keyService.create(dto)
+		return await this.keyService.create(dto)
 	}
 
-	@UsePipes(new ValidationPipe())
 	@HttpCode(200)
 	@Post('key-check/:key')
 	async keyCheck(@Param('key') key: string) {
-		return this.keyService.keyCheck(key)
+		return await this.keyService.keyCheck(key)
 	}
 }

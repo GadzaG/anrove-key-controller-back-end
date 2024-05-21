@@ -8,38 +8,35 @@ import { UserDto } from './user.dto'
 export class UserService {
 	constructor(private prisma: PrismaService) {}
 
-	getById(id: string) {
-		return this.prisma.user.findUnique({
+	async getById(id: string) {
+		return await this.prisma.user.findUnique({
 			where: { id },
 			include: { products: true }
 		})
 	}
 
-	getByEmail(email: string) {
-		return this.prisma.user.findUnique({
+	async getByEmail(email: string) {
+		return await this.prisma.user.findUnique({
 			where: { email }
 		})
 	}
 
-	async create(dto: AuthDto) {
-		const user = {
-			email: dto.email,
+	async create({ email, password }: AuthDto) {
+		const data = {
+			email: email,
 			name: '',
-			password: await hash(dto.password)
+			password: await hash(password)
 		}
-		console.log(`email:${user.email}\tpassword:${user.password}`)
 		return await this.prisma.user.create({
-			data: user
+			data
 		})
 	}
 
 	async getProfile(id: string) {
-		const profile = await this.getById(id)
-
-		const totalProductsLenght = profile.products.length
-		const totalProducts = profile.products
-
-		const { password, ...rest } = profile
+		const profile = await this.getById(id),
+			totalProductsLenght = profile.products.length,
+			totalProducts = profile.products,
+			{ password, ...rest } = profile // eslint-disable-line
 
 		return {
 			user: rest,

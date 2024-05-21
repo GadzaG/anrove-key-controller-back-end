@@ -14,8 +14,6 @@ import { UserModule } from './user/user.module'
 		ProductModule,
 		KeyModule,
 		GlobalModule
-	],
-	controllers: [],
-	providers: []
+	]
 })
 export class AppModule {}

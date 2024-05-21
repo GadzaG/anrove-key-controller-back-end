@@ -1,67 +1,62 @@
-import { Injectable } from '@nestjs/common'
+import {
+	BadRequestException,
+	Injectable,
+	Logger,
+	NotFoundException
+} from '@nestjs/common'
+import { Key } from '@prisma/client'
 import { PrismaService } from 'src/prisma.service'
+import { randomString } from 'src/utils/random-string'
 import { KeyDto } from './key.dto'
 
 @Injectable()
 export class KeyService {
 	constructor(private prisma: PrismaService) {}
+	logger = new Logger()
 
-	async getAll(productID: string) {
-		return this.prisma.key.findMany({
+	async getAll(productID: string): Promise<Key[]> {
+		const keys = await this.prisma.key.findMany({
 			where: {
 				Product: { id: productID }
 			}
 		})
+		if (!keys) throw new BadRequestException('Error!')
+		return keys
 	}
 
 	async delete() {
-		return 'true'
+		return true
 	}
 
-	private randomString(length: number) {
-		const characters =
-			'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-		let result = ''
-
-		for (let i = 0; i < length; i++) {
-			const randomIndex = Math.floor(Math.random() * characters.length)
-			result += characters.charAt(randomIndex)
-		}
-
-		return result
-	}
-
-	async create(keyDto: KeyDto) {
+	async create({ keyCount, productID }: KeyDto) {
 		try {
-			for (let i: number = 0; i < keyDto.keyCount; i++) {
+			for (let i: number = 0; i < keyCount; i++) {
 				await this.prisma.key.create({
 					data: {
-						key: this.randomString(16),
+						key: await randomString(16),
 						Product: {
 							connect: {
-								id: keyDto.productID
+								id: productID
 							}
 						}
 					}
 				})
 			}
-			return 'done'
+			return true
 		} catch (e) {
-			console.log(e)
+			this.logger.error(e)
+			return false
 		}
 	}
 
-	async keyCheck(key: string) {
-		const keyData = this.prisma.key.findUnique({
+	async keyCheck(key: string): Promise<Key> {
+		const keyData = await this.prisma.key.findUnique({
 			where: {
 				key
 			}
 		})
 
-		if (keyData) {
-			return keyData
-		} else {
-			return 'key not found'
-		}
+		if (!keyData) throw new NotFoundException('Key not found!')
+		return keyData
 	}
 }
