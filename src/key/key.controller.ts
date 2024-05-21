@@ -23,9 +23,11 @@ export class KeyController {
 		return this.keyService.getAll(productID)
 	}
 
-	@Delete()
+	@Delete('delete')
 	@Auth()
-	delete() {}
+	async delete() {
+		return this.keyService.delete()
+	}
 
 	@HttpCode(200)
 	@Post('create')
