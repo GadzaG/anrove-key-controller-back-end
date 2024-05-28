@@ -2,15 +2,18 @@ import {
 	BadRequestException,
 	Injectable,
 	Logger,
-	NotFoundException,
 	UnauthorizedException
 } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
 import { JwtService } from '@nestjs/jwt'
+
 import { verify } from 'argon2'
 import { Response } from 'express'
-import { UserService } from 'src/user/user.service'
-import { AuthDto } from './dto/auth.dto'
+
+import { ConfigService } from '@nestjs/config'
+
+import { Role } from '@prisma/client'
+import { AuthDto } from '../user/auth.dto'
+import { UserService } from '../user/user.service'
 
 @Injectable()
 export class AuthService {
@@ -19,19 +22,16 @@ export class AuthService {
 		private userService: UserService,
 		private configService: ConfigService
 	) {}
-	DEVELOPMENT = this.configService.get<string>('NODE_ENV')
 	HOST = this.configService.get<string>('HOST')
-	CLIENT_PORT = this.configService.get<number>('CLIENT_PORT')
-	domain = `${this.HOST}:${this.CLIENT_PORT}`
-	IS_DEV = this.DEVELOPMENT === 'development'
+	IS_DEV = this.configService.get<string>('NODE_ENV') === 'development'
 	logger = new Logger()
 	EXPIRE_DAY_REFRESH_TOKEN = 1
 	REFRESH_TOKEN_NAME = 'refreshToken'
 
 	async login(dto: AuthDto) {
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const { password, ...user } = await this.validateUser(dto)
-		const tokens = this.issueTokens(user.id)
+		// eslint-disable-next-line
+		const { password, ...user } = await this.validateUser(dto),
+			tokens = await this.issueTokens(user.id, user.role)
 
 		return {
 			user,
@@ -44,73 +44,78 @@ export class AuthService {
 
 		if (oldUser) throw new BadRequestException('User already exists')
 
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		// eslint-disable-next-line
 		const { password, ...user } = await this.userService.create(dto)
 
-		const tokens = this.issueTokens(user.id)
+		const tokens = await this.issueTokens(user.id, user.role)
 
 		return {
 			user,
 			...tokens
 		}
-	}
-
-	private issueTokens(userId: string) {
-		const data = { id: userId }
-		const accessToken = this.jwt.sign(data, {
-			expiresIn: '1h'
-		})
-		const refreshToken = this.jwt.sign(data, {
-			expiresIn: '7d'
-		})
-		return { accessToken, refreshToken }
-	}
-
-	private async validateUser(dto: AuthDto) {
-		const user = await this.userService.getByEmail(dto.email)
-		if (!user) throw new NotFoundException('user not found')
-
-		const isValid = await verify(user.password, dto.password)
-		if (!isValid) throw new UnauthorizedException('invalid password')
-
-		return user
-	}
-
-	addRefreshTokenToResponse({ cookie }: Response, refreshToken: string) {
-		const expiresIn = new Date()
-		expiresIn.setDate(expiresIn.getDate() + this.EXPIRE_DAY_REFRESH_TOKEN)
-
-		cookie(this.REFRESH_TOKEN_NAME, refreshToken, {
-			httpOnly: true,
-			domain: this.HOST,
-			expires: expiresIn,
-			secure: true,
-			sameSite: this.IS_DEV ? 'none' : 'lax'
-		})
-	}
-
-	removeRefreshTokenFromResponse({ cookie }: Response) {
-		cookie(this.REFRESH_TOKEN_NAME, '', {
-			httpOnly: true,
-			domain: this.HOST,
-			expires: new Date(0),
-			secure: true,
-			sameSite: this.IS_DEV ? 'none' : 'lax'
-		})
 	}
 
 	async getNewTokens(refreshToken: string) {
 		const result = await this.jwt.verifyAsync(refreshToken)
 		if (!result) throw new UnauthorizedException('Invalid refresh token')
-
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const { password, ...user } = await this.userService.getById(result.id)
-
-		const tokens = this.issueTokens(user.id)
+		// eslint-disable-next-line
+		const { password, ...user } = await this.userService.getById(result.id),
+			tokens = await this.issueTokens(user.id, user.role)
 
 		return {
 			user,
 			...tokens
 		}
+	}
+
+	private async issueTokens(id: string, role?: Role) {
+		const data = { id, role },
+			accessToken = this.jwt.sign(data, {
+				expiresIn: '1h'
+			}),
+			refreshToken = this.jwt.sign(data, {
+				expiresIn: '7d'
+			})
+
+		return { accessToken, refreshToken }
+	}
+
+	private async validateUser(dto: AuthDto) {
+		const user = await this.userService.getByEmail(dto.email)
+
+		if (!user) throw new UnauthorizedException('Email or password invalid')
+
+		const isValid = await verify(user.password, dto.password)
+
+		if (!isValid) throw new UnauthorizedException('Email or password invalid')
+
+		return user
+	}
+
+	addRefreshTokenToResponse(res: Response, refreshToken: string) {
+		const expires = new Date()
+		expires.setDate(expires.getDate() + this.EXPIRE_DAY_REFRESH_TOKEN)
+		const { HOST: domain, IS_DEV, REFRESH_TOKEN_NAME } = this
+
+		res.cookie(REFRESH_TOKEN_NAME, refreshToken, {
+			httpOnly: true,
+			domain,
+			expires,
+			secure: true,
+			sameSite: IS_DEV ? 'none' : 'lax'
+			// sameSite: 'none'
+		})
+	}
+
+	removeRefreshTokenFromResponse(res: Response) {
+		const { HOST: domain, IS_DEV, REFRESH_TOKEN_NAME } = this
+
+		res.cookie(REFRESH_TOKEN_NAME, '', {
+			httpOnly: true,
+			domain,
+			expires: new Date(0),
+			secure: true,
+			sameSite: IS_DEV ? 'none' : 'lax'
+		})
 	}
 }

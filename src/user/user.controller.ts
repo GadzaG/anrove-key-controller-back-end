@@ -1,23 +1,30 @@
-import { Body, Controller, Get, HttpCode, Put } from '@nestjs/common'
-import { Auth } from 'src/auth/decorators/auth.decorator'
-import { CurrentUser } from 'src/auth/decorators/user.decorator'
-import { UserDto } from './user.dto'
+import { Controller, Delete, Get, Put } from '@nestjs/common'
+import { Auth } from '../auth/decorators/auth.decorator'
+import { CurrentUser } from '../auth/decorators/user.decorator'
 import { UserService } from './user.service'
 
-@Controller('user')
+@Controller('users')
 export class UserController {
 	constructor(private readonly userService: UserService) {}
 
+	@Auth()
 	@Get('profile')
-	@Auth()
-	async profile(@CurrentUser('id') id: string) {
-		return this.userService.getProfile(id)
+	async getProfile(@CurrentUser('id') id: string) {
+		return await this.userService.getById(id)
 	}
-
-	@HttpCode(200)
-	@Put('update')
+	@Auth('ADMIN')
+	@Get()
+	async getList() {
+		return await this.userService.getUsers()
+	}
+	@Auth('ADMIN')
+	@Delete('delete')
+	async deleteUser() {
+		return await this.userService.deleteUser()
+	}
 	@Auth()
-	async updateProfile(@CurrentUser('id') id: string, @Body() dto: UserDto) {
-		return this.userService.update(id, dto)
+	@Put('switch')
+	async switchRole(@CurrentUser('id') id: string) {
+		return await this.userService.switchRole(id)
 	}
 }

@@ -1,4 +1,5 @@
 import {
+	BadRequestException,
 	Body,
 	Controller,
 	HttpCode,
@@ -8,12 +9,16 @@ import {
 	UnauthorizedException
 } from '@nestjs/common'
 import { Request, Response } from 'express'
+import { AuthDto } from '../user/auth.dto'
+import { UserService } from '../user/user.service'
 import { AuthService } from './auth.service'
-import { AuthDto } from './dto/auth.dto'
 
 @Controller('auth')
 export class AuthController {
-	constructor(private readonly authService: AuthService) {}
+	constructor(
+		private readonly authService: AuthService,
+		private readonly userService: UserService
+	) {}
 
 	@HttpCode(200)
 	@Post('login')
@@ -32,7 +37,6 @@ export class AuthController {
 	) {
 		const { refreshToken, ...response } = await this.authService.register(dto)
 		this.authService.addRefreshTokenToResponse(res, refreshToken)
-
 		return response
 	}
 
@@ -54,7 +58,7 @@ export class AuthController {
 			refreshTokenFromCookies
 		)
 
-		this.authService.addRefreshTokenToResponse(res, refreshToken)
+		await this.authService.addRefreshTokenToResponse(res, refreshToken)
 
 		return response
 	}
@@ -62,7 +66,13 @@ export class AuthController {
 	@HttpCode(200)
 	@Post('logout')
 	async logout(@Res({ passthrough: true }) res: Response) {
-		this.authService.removeRefreshTokenFromResponse(res)
-		return true
+		try {
+			await this.authService.removeRefreshTokenFromResponse(res)
+			return true
+		} catch (error) {
+			console.error(error)
+
+			throw new BadRequestException('Ошибка!')
+		}
 	}
 }
