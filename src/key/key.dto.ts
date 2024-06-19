@@ -7,3 +7,12 @@ export class KeyDto {
 	@IsNumber()
 	keyCount: number
 }
+
+export class KeyCheckDto {
+	@IsString()
+	userID: string
+	@IsString()
+	productID: string
+	@IsString()
+	key: string
+}

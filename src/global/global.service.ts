@@ -16,8 +16,12 @@ interface IExistingGlobals {
 export class GlobalService {
 	constructor(private prisma: PrismaService) {}
 
+<<<<<<< HEAD
 	// GET
 	async getGlobal({ varName }: GlobalAPIDto) {
+=======
+	async getGlobal({ userID, varName }: GlobalAPIDto) {
+>>>>>>> ccb32e39bd2a3afdedcdae74c3354ff59927373f
 		const result = await this.prisma.global.findMany({
 			where: {
 				varName
@@ -97,6 +101,16 @@ export class GlobalService {
 		} catch (error) {
 			throw new BadRequestException(`Error`, error)
 		}
+<<<<<<< HEAD
+=======
+
+		const deletedGlobal = await this.prisma.global.delete({
+			where: {
+				id: existingGlobal.id
+			}
+		})
+		return deletedGlobal
+>>>>>>> ccb32e39bd2a3afdedcdae74c3354ff59927373f
 	}
 
 	// TOOLS
