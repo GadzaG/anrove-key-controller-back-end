@@ -1,9 +1,4 @@
-import {
-	BadRequestException,
-	Injectable,
-	Logger,
-	NotFoundException
-} from '@nestjs/common'
+import { BadRequestException, Injectable, Logger } from '@nestjs/common'
 import { Key } from '@prisma/client'
 import * as crypto from 'crypto'
 import { PrismaService } from 'src/prisma.service'
@@ -61,23 +56,23 @@ export class KeyService {
 			Buffer.from(process.env.SECRET_KEY, 'utf8'),
 			iv
 		)
-		let decryptedRequest = decipher.update(encryptedRequest, 'base64', 'utf8')
-		decryptedRequest += decipher.final('utf8')
-		const jsonRequest = JSON.parse(decryptedRequest)
+		// let decryptedRequest = decipher.update(encryptedRequest, 'base64', 'utf8')
+		// decryptedRequest += decipher.final('utf8')
+		// const jsonRequest = JSON.parse(decryptedRequest)
 
-		console.log(jsonRequest.key)
+		// console.log(jsonRequest.key)
 
 		// Ищем ключ в базе данных
-		const checkKeyData = await this.prisma.key.findUnique({
-			where: {
-				key: jsonRequest.key
-			}
-		})
+		// const checkKeyData = await this.prisma.key.findUnique({
+		// 	where: {
+		// 		key: jsonRequest.key
+		// 	}
+		// })
 
 		// Проверяем, что ключ существует
-		if (!checkKeyData) {
-			throw new NotFoundException('Key not found!')
-		}
+		// if (!checkKeyData) {
+		// 	throw new NotFoundException('Key not found!')
+		// }
 
 		return keyData
 	}

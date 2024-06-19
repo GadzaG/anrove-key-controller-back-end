@@ -17,8 +17,8 @@ import { JwtStrategy } from './jwt.strategy'
 		JwtModule.registerAsync({
 			imports: [ConfigModule],
 			inject: [ConfigService],
-			useFactory: getJwtConfig,
-		}),
-	],
+			useFactory: getJwtConfig
+		})
+	]
 })
 export class AuthModule {}
