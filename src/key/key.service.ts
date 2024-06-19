@@ -5,6 +5,7 @@ import {
 	NotFoundException
 } from '@nestjs/common'
 import { Key } from '@prisma/client'
+import * as crypto from 'crypto'
 import { PrismaService } from 'src/prisma.service'
 import { randomString } from 'src/utils/random-string'
 import { KeyDto } from './key.dto'
@@ -49,14 +50,46 @@ export class KeyService {
 		}
 	}
 
-	async keyCheck(key: string): Promise<Key> {
-		const keyData = await this.prisma.key.findUnique({
+	async keyCheck(keyData: string) {
+		console.log(keyData)
+
+		// Расшифровываем запрос
+		const iv = Buffer.from(keyData.slice(0, 16), 'base64')
+		const encryptedRequest = Buffer.from(keyData.slice(16), 'base64')
+		const decipher = crypto.createDecipheriv(
+			'aes-256-cbc',
+			Buffer.from(process.env.SECRET_KEY, 'utf8'),
+			iv
+		)
+		let decryptedRequest = decipher.update(encryptedRequest, 'base64', 'utf8')
+		decryptedRequest += decipher.final('utf8')
+		const jsonRequest = JSON.parse(decryptedRequest)
+
+		console.log(jsonRequest.key)
+
+		// Ищем ключ в базе данных
+		const checkKeyData = await this.prisma.key.findUnique({
 			where: {
-				key
+				key: jsonRequest.key
 			}
 		})
 
-		if (!keyData) throw new NotFoundException('Key not found!')
+		// Проверяем, что ключ существует
+		if (!checkKeyData) {
+			throw new NotFoundException('Key not found!')
+		}
+
 		return keyData
 	}
+	// async keyCheck({ userID, productID, key }: KeyCheckDto) {
+	// 	const keyData = await this.prisma.key.findFirst({
+	// 		where: {
+	// 			key
+	// 		}
+	// 	})
+
+	// 	if (!keyData) return { access: false }
+
+	// 	return { access: true }
+	// }
 }

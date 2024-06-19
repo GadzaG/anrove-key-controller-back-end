@@ -34,9 +34,14 @@ export class KeyController {
 		return await this.keyService.create(dto)
 	}
 
-	@HttpCode(200)
-	@Post('key-check/:key')
-	async keyCheck(@Param('key') key: string) {
-		return await this.keyService.keyCheck(key)
+	@Post('key-check')
+	async keyCheck(@Body('keyData') keyData: string) {
+		return await this.keyService.keyCheck(keyData)
 	}
+
+	// @HttpCode(200)
+	// @Post('key-check')
+	// async keyCheck(@Body() dto: KeyCheckDto) {
+	// 	return await this.keyService.keyCheck(dto)
+	// }
 }
