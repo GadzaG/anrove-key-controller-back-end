@@ -31,7 +31,11 @@ export class AuthService {
 	async login(dto: AuthDto) {
 		// eslint-disable-next-line
 		const { password, ...user } = await this.validateUser(dto),
-			tokens = await this.issueTokens(user.id, user.role)
+			tokens = await this.issueTokens({
+				email: user.email,
+				id: user.id,
+				role: user.role
+			})
 
 		return {
 			user,
@@ -45,9 +49,12 @@ export class AuthService {
 		if (oldUser) throw new BadRequestException('User already exists')
 
 		// eslint-disable-next-line
-		const { password, ...user } = await this.userService.create(dto)
-
-		const tokens = await this.issueTokens(user.id, user.role)
+		const { password, ...user } = await this.userService.create(dto),
+			tokens = await this.issueTokens({
+				email: user.email,
+				id: user.id,
+				role: user.role
+			})
 
 		return {
 			user,
@@ -60,7 +67,11 @@ export class AuthService {
 		if (!result) throw new UnauthorizedException('Invalid refresh token')
 		// eslint-disable-next-line
 		const { password, ...user } = await this.userService.getById(result.id),
-			tokens = await this.issueTokens(user.id, user.role)
+			tokens = await this.issueTokens({
+				email: user.email,
+				id: user.id,
+				role: user.role
+			})
 
 		return {
 			user,
@@ -68,8 +79,16 @@ export class AuthService {
 		}
 	}
 
-	private async issueTokens(id: string, role?: Role) {
-		const data = { id, role },
+	private async issueTokens({
+		id,
+		role,
+		email
+	}: {
+		email: string
+		id: string
+		role?: Role
+	}) {
+		const data = { id, role, email },
 			accessToken = this.jwt.sign(data, {
 				expiresIn: '1h'
 			}),
