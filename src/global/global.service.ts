@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import {
+	BadRequestException,
+	Injectable,
+	NotFoundException
+} from '@nestjs/common'
 import { PrismaService } from 'src/prisma.service'
 import { GlobalAPIDto, GlobalDto } from './global.dto'
 
@@ -13,10 +17,9 @@ export class GlobalService {
 	constructor(private prisma: PrismaService) {}
 
 	// GET
-	async getGlobal({ userID, varName }: GlobalAPIDto) {
+	async getGlobal({ varName }: GlobalAPIDto) {
 		const result = await this.prisma.global.findMany({
 			where: {
-				userID,
 				varName
 			},
 			select: {
@@ -78,25 +81,22 @@ export class GlobalService {
 	}
 
 	// DELETE
-	async deleteGlobal({ varName }: Pick<GlobalDto, 'varName'>, id: string) {
-		const existingGlobal = await this.prisma.global.findFirst({
-			where: {
-				userID: id,
-				varName: varName
-			}
-		})
-
-		if (!existingGlobal) {
-			throw new NotFoundException(`varName ${varName} not found for user ${id}`)
+	async deleteGlobal({ varName }: Pick<GlobalAPIDto, 'varName'>, id: string) {
+		try {
+			const existingGlobal = await this.existingGlobals({
+				id,
+				optional: false,
+				varName
+			})
+			const deletedGlobal = await this.prisma.global.delete({
+				where: {
+					id: existingGlobal.id
+				}
+			})
+			return deletedGlobal
+		} catch (error) {
+			throw new BadRequestException(`Error`, error)
 		}
-
-		const deletedGlobal = await this.prisma.global.delete({
-			where: {
-				id: existingGlobal.id
-			}
-		})
-
-		return deletedGlobal
 	}
 
 	// TOOLS
@@ -108,9 +108,7 @@ export class GlobalService {
 			}
 		})
 		if (optional ? existingGlobal : !existingGlobal) {
-			throw new NotFoundException(
-				`varName ${varName} already exists for user ${id}`
-			)
+			throw new NotFoundException(`varName ${varName} not found for user ${id}`)
 		}
 		return existingGlobal
 	}

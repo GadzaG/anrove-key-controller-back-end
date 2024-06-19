@@ -8,35 +8,25 @@ import { HttpExceptionFilter } from './utils/http-expection.filter'
 import { EmojiLogger } from './utils/logger-emoj.logger'
 
 async function bootstrap() {
-	const {
-		listen,
-		enableCors,
-		get,
-		useGlobalPipes,
-		setGlobalPrefix,
-		useGlobalFilters,
-		use,
-		disable
-	} = await NestFactory.create<NestExpressApplication>(AppModule, {
-		logger: new EmojiLogger()
-	})
-
-	const logger = new Logger(),
-		config = await get(ConfigService),
+	const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+			logger: new EmojiLogger()
+		}),
+		logger = new Logger(),
+		config = await app.get(ConfigService),
 		port = config.get<number>('PORT'),
 		client = config.get<string>('CLIENT'),
 		nodeEnv = config.get<string>('NODE_ENV'),
-		host = config.get<string>('HOST'),
+		domain = config.get<string>('DOMAIN'),
 		isDev = nodeEnv === 'development'
 
-	!isDev && (await useGlobalFilters(new HttpExceptionFilter()))
+	await app.useGlobalFilters(new HttpExceptionFilter())
 
-	await disable('x-powered-by')
-	await setGlobalPrefix('api')
-	await useGlobalPipes(new ValidationPipe())
-	await use(cookieParser())
-	await enableCors({
-		origin: [client, `http://${host}`],
+	await app.disable('x-powered-by')
+	await app.setGlobalPrefix('api')
+	await app.useGlobalPipes(new ValidationPipe())
+	await app.use(cookieParser())
+	await app.enableCors({
+		origin: [client, `http://${domain}`],
 		credentials: true,
 		exposedHeaders: 'set-cookie'
 	})
@@ -45,7 +35,7 @@ async function bootstrap() {
 		logger.error('Нету порта!')
 		return
 	}
-	await listen(port, () => {
+	await app.listen(port, () => {
 		isDev
 			? logger.log(`+ Сервер запущен на ${port} порту, CORS: ${client}`)
 			: logger.log('+ Сервер запущен')

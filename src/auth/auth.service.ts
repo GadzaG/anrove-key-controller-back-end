@@ -22,21 +22,20 @@ export class AuthService {
 		private userService: UserService,
 		private configService: ConfigService
 	) {}
-	HOST = this.configService.get<string>('HOST')
+	DOMAIN = this.configService.get<string>('DOMAIN')
 	IS_DEV = this.configService.get<string>('NODE_ENV') === 'development'
 	logger = new Logger()
 	EXPIRE_DAY_REFRESH_TOKEN = 1
 	REFRESH_TOKEN_NAME = 'refreshToken'
 
 	async login(dto: AuthDto) {
-		// eslint-disable-next-line
-		const { password, ...user } = await this.validateUser(dto),
+		const user = await this.validateUser(dto),
 			tokens = await this.issueTokens({
 				email: user.email,
 				id: user.id,
 				role: user.role
 			})
-
+		delete user['password']
 		return {
 			user,
 			...tokens
@@ -48,14 +47,13 @@ export class AuthService {
 
 		if (oldUser) throw new BadRequestException('User already exists')
 
-		// eslint-disable-next-line
-		const { password, ...user } = await this.userService.create(dto),
+		const user = await this.userService.create(dto),
 			tokens = await this.issueTokens({
 				email: user.email,
 				id: user.id,
 				role: user.role
 			})
-
+		delete user['password']
 		return {
 			user,
 			...tokens
@@ -65,14 +63,13 @@ export class AuthService {
 	async getNewTokens(refreshToken: string) {
 		const result = await this.jwt.verifyAsync(refreshToken)
 		if (!result) throw new UnauthorizedException('Invalid refresh token')
-		// eslint-disable-next-line
-		const { password, ...user } = await this.userService.getById(result.id),
+		const user = await this.userService.getById(result.id),
 			tokens = await this.issueTokens({
 				email: user.email,
 				id: user.id,
 				role: user.role
 			})
-
+		delete user['password']
 		return {
 			user,
 			...tokens
@@ -114,27 +111,33 @@ export class AuthService {
 	addRefreshTokenToResponse(res: Response, refreshToken: string) {
 		const expires = new Date()
 		expires.setDate(expires.getDate() + this.EXPIRE_DAY_REFRESH_TOKEN)
-		const { HOST: domain, IS_DEV, REFRESH_TOKEN_NAME } = this
+		const { DOMAIN: domain, IS_DEV, REFRESH_TOKEN_NAME } = this,
+			httpOnly = true,
+			sameSite = IS_DEV ? 'none' : 'lax',
+			secure = true
 
 		res.cookie(REFRESH_TOKEN_NAME, refreshToken, {
-			httpOnly: true,
+			httpOnly,
 			domain,
 			expires,
-			secure: true,
-			sameSite: IS_DEV ? 'none' : 'lax'
-			// sameSite: 'none'
+			secure,
+			sameSite
 		})
 	}
 
 	removeRefreshTokenFromResponse(res: Response) {
-		const { HOST: domain, IS_DEV, REFRESH_TOKEN_NAME } = this
+		const { DOMAIN: domain, IS_DEV, REFRESH_TOKEN_NAME } = this,
+			sameSite = IS_DEV ? 'none' : 'lax',
+			secure = true,
+			expires = new Date(),
+			httpOnly = true
 
 		res.cookie(REFRESH_TOKEN_NAME, '', {
-			httpOnly: true,
+			httpOnly,
 			domain,
-			expires: new Date(0),
-			secure: true,
-			sameSite: IS_DEV ? 'none' : 'lax'
+			expires,
+			secure,
+			sameSite
 		})
 	}
 }
