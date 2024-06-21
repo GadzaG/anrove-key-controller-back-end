@@ -8,7 +8,7 @@ import {
 	Post
 } from '@nestjs/common'
 import { Auth } from 'src/auth/decorators/auth.decorator'
-import { KeyDto } from './key.dto'
+import { KeyCheckDto, KeyDto } from './key.dto'
 import { KeyService } from './key.service'
 
 @Controller('key')
@@ -35,13 +35,7 @@ export class KeyController {
 	}
 
 	@Post('key-check')
-	async keyCheck(@Body('keyData') keyData: string) {
-		return await this.keyService.keyCheck(keyData)
+	async keyCheck(@Body() dto: KeyCheckDto) {
+		return await this.keyService.keyCheck(dto)
 	}
-
-	// @HttpCode(200)
-	// @Post('key-check')
-	// async keyCheck(@Body() dto: KeyCheckDto) {
-	// 	return await this.keyService.keyCheck(dto)
-	// }
 }

@@ -12,7 +12,5 @@ export class KeyCheckDto {
 	@IsString()
 	userID: string
 	@IsString()
-	productID: string
-	@IsString()
-	key: string
+	data: string
 }

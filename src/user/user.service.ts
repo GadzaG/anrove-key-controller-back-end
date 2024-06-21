@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
 import { hash } from 'argon2'
 
+import { randomBytes } from 'crypto'
 import { PrismaService } from 'src/prisma.service'
 import { AuthDto } from './auth.dto'
 import { userOutput } from './user.output'
@@ -43,7 +44,8 @@ export class UserService {
 			data: {
 				email,
 				name: name ? name : '',
-				password: await hash(password)
+				password: await hash(password),
+				secret_key: await randomBytes(16).toString('hex')
 			}
 		})
 	}
@@ -56,6 +58,7 @@ export class UserService {
 			throw new BadRequestException(error)
 		}
 	}
+
 	async switchRole(userId: string) {
 		const { id, role } = await this.getById(userId)
 		const { role: switchedRole } = await this.prisma.user.update({
