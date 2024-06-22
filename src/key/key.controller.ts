@@ -23,8 +23,8 @@ export class KeyController {
 
 	@Delete('delete')
 	@Auth()
-	async delete() {
-		return await this.keyService.delete()
+	async delete(@Body('keyID') keyID: string) {
+		return await this.keyService.delete(keyID)
 	}
 
 	@HttpCode(200)

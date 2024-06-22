@@ -41,7 +41,6 @@ export class GlobalService {
 		return result
 	}
 
-	// POST | PUT
 	async createGlobal({ varName, varData }: GlobalDto, id: string) {
 		await this.existingGlobals({ id, varName, optional: true })
 
@@ -79,7 +78,6 @@ export class GlobalService {
 		return updatedGlobal
 	}
 
-	// DELETE
 	async deleteGlobal({ varName }: Pick<GlobalAPIDto, 'varName'>, id: string) {
 		try {
 			const existingGlobal = await this.existingGlobals({

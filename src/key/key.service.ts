@@ -1,8 +1,10 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common'
 import { Key } from '@prisma/client'
+import { time } from 'console'
 import * as crypto from 'crypto'
 import { PrismaService } from 'src/prisma.service'
 import { decrypt } from 'src/utils/decrypt'
+import { encrypt } from 'src/utils/encrypt'
 import { KeyCheckDto, KeyDto } from './key.dto'
 
 @Injectable()
@@ -20,8 +22,12 @@ export class KeyService {
 		return keys
 	}
 
-	async delete() {
-		return true
+	async delete(keyID: string) {
+		await this.prisma.key.delete({
+			where: {
+				id: keyID
+			}
+		})
 	}
 
 	async create({ keyCount, productID }: KeyDto) {
@@ -50,7 +56,6 @@ export class KeyService {
 		console.log('userID\t' + userID)
 		console.log('data\t' + data)
 
-		//ищем пользователя в таблице User, чтоб взять его secret_key
 		const user = await this.prisma.user.findUnique({
 			where: {
 				id: userID
@@ -61,9 +66,21 @@ export class KeyService {
 			throw new Error('User not found')
 		}
 
-		//дешифровываем строку data
-		const decryptedData = decrypt(data, user.secret_key)
+		const decryptedData: Object = decrypt(data, user.secret_key)
 		console.log(decryptedData)
-		return true
+
+		const key = await this.prisma.key.findUnique({
+			where: {
+				key: decryptedData['key']
+			}
+		})
+
+		if (!key) return { response: encrypt('key not found', user.secret_key) }
+
+		if (key.status == 'FREE') {
+			key.status = 'BUSY'
+			key.startAt = time.now()
+			key.endAt = product.subscriptionTime
+		}
 	}
 }
