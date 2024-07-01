@@ -2,43 +2,43 @@ import { Logger, ValidationPipe } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
 import { NestExpressApplication } from '@nestjs/platform-express'
+import * as compression from 'compression'
 import * as cookieParser from 'cookie-parser'
 import { AppModule } from './app.module'
-import { HttpExceptionFilter } from './utils/http-expection.filter'
-import { EmojiLogger } from './utils/logger-emoj.logger'
+import { EmojiLogger, listenerColorize } from './utils/logger-emoj.logger'
 
 async function bootstrap() {
-	const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+	const {
+			disable,
+			useGlobalPipes,
+			use,
+			enableCors,
+			listen,
+			get,
+			setGlobalPrefix,
+			useGlobalFilters
+		} = await NestFactory.create<NestExpressApplication>(AppModule, {
 			logger: new EmojiLogger()
 		}),
 		logger = new Logger(),
-		config = await app.get(ConfigService),
+		config = await get(ConfigService),
 		port = config.get<number>('PORT'),
-		client = config.get<string>('CLIENT'),
-		nodeEnv = config.get<string>('NODE_ENV'),
-		domain = config.get<string>('DOMAIN'),
-		isDev = nodeEnv === 'development'
+		client = config.get<string>('CLIENT')
 
-	await app.useGlobalFilters(new HttpExceptionFilter())
+	disable('x-powered-by')
+	setGlobalPrefix('api')
+	useGlobalPipes(new ValidationPipe())
+	use(cookieParser())
+	use(compression())
 
-	await app.disable('x-powered-by')
-	await app.setGlobalPrefix('api')
-	await app.useGlobalPipes(new ValidationPipe())
-	await app.use(cookieParser())
-	await app.enableCors({
-		origin: [client, `http://${domain}`],
+	enableCors({
+		origin: [client],
 		credentials: true,
 		exposedHeaders: 'set-cookie'
 	})
 
-	if (!port) {
-		logger.error('Нету порта!')
-		return
-	}
-	await app.listen(port, () => {
-		isDev
-			? logger.log(`+ Сервер запущен на ${port} порту, CORS: ${client}`)
-			: logger.log('+ Сервер запущен')
+	await listen(port, () => {
+		logger.log(listenerColorize(`🚀 Server running on port ${port}`))
 	})
 }
 bootstrap()

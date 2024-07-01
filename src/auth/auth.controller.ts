@@ -6,7 +6,9 @@ import {
 	Post,
 	Req,
 	Res,
-	UnauthorizedException
+	UnauthorizedException,
+	UsePipes,
+	ValidationPipe
 } from '@nestjs/common'
 import { Request, Response } from 'express'
 import { AuthDto } from '../user/auth.dto'
@@ -22,6 +24,7 @@ export class AuthController {
 
 	@HttpCode(200)
 	@Post('login')
+	@UsePipes(new ValidationPipe())
 	async login(@Body() dto: AuthDto, @Res({ passthrough: true }) res: Response) {
 		const { refreshToken, ...response } = await this.authService.login(dto)
 		this.authService.addRefreshTokenToResponse(res, refreshToken)
@@ -31,6 +34,7 @@ export class AuthController {
 
 	@HttpCode(200)
 	@Post('register')
+	@UsePipes(new ValidationPipe())
 	async register(
 		@Body() dto: AuthDto,
 		@Res({ passthrough: true }) res: Response

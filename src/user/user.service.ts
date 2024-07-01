@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
 import { hash } from 'argon2'
 
+import { Role, User } from '@prisma/client'
 import { randomBytes } from 'crypto'
 import { PrismaService } from 'src/prisma.service'
 import { AuthDto } from './auth.dto'
@@ -8,22 +9,16 @@ import { userOutput } from './user.output'
 
 @Injectable()
 export class UserService {
-	constructor(private prisma: PrismaService) {}
+	constructor(private readonly prisma: PrismaService) {}
 
-	async getUsers() {
-		return this.prisma.user.findMany({
-			select: {
-				id: true,
-				name: true,
-				email: true,
-				password: false,
-				role: true
-			}
-		})
+	async getUsers(): Promise<User[]> {
+		const users = await this.prisma.user.findMany()
+		if (!users) throw new BadRequestException('Error!')
+		return users
 	}
 
 	async getById(id: string) {
-		return this.prisma.user.findUnique({
+		return await this.prisma.user.findUnique({
 			where: {
 				id
 			},
@@ -32,7 +27,7 @@ export class UserService {
 	}
 
 	async getByEmail(email: string) {
-		return this.prisma.user.findUnique({
+		return await this.prisma.user.findUnique({
 			where: {
 				email
 			}
@@ -64,7 +59,7 @@ export class UserService {
 		const { role: switchedRole } = await this.prisma.user.update({
 			where: { id },
 			data: {
-				role: role === 'ADMIN' ? 'USER' : 'ADMIN'
+				role: role === Role.ADMIN ? Role.USER : Role.ADMIN
 			}
 		})
 		return { message: `Now your role is: ${switchedRole}` }

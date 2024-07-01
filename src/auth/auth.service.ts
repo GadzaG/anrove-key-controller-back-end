@@ -12,6 +12,7 @@ import { Response } from 'express'
 import { ConfigService } from '@nestjs/config'
 
 import { Role } from '@prisma/client'
+import { isDev } from 'src/utils/is-dev'
 import { AuthDto } from '../user/auth.dto'
 import { UserService } from '../user/user.service'
 
@@ -19,11 +20,10 @@ import { UserService } from '../user/user.service'
 export class AuthService {
 	constructor(
 		private jwt: JwtService,
-		private userService: UserService,
-		private configService: ConfigService
+		private readonly userService: UserService,
+		private readonly configService: ConfigService
 	) {}
 	DOMAIN = this.configService.get<string>('DOMAIN')
-	IS_DEV = this.configService.get<string>('NODE_ENV') === 'development'
 	logger = new Logger()
 	EXPIRE_DAY_REFRESH_TOKEN = 1
 	REFRESH_TOKEN_NAME = 'refreshToken'
@@ -109,12 +109,13 @@ export class AuthService {
 	}
 
 	addRefreshTokenToResponse(res: Response, refreshToken: string) {
-		const expires = new Date()
-		expires.setDate(expires.getDate() + this.EXPIRE_DAY_REFRESH_TOKEN)
-		const { DOMAIN: domain, IS_DEV, REFRESH_TOKEN_NAME } = this,
+		const expires = new Date(),
+			{ DOMAIN: domain, REFRESH_TOKEN_NAME } = this,
 			httpOnly = true,
-			sameSite = IS_DEV ? 'none' : 'lax',
+			sameSite = isDev(this.configService) ? 'none' : 'lax',
 			secure = true
+
+		expires.setDate(expires.getDate() + this.EXPIRE_DAY_REFRESH_TOKEN)
 
 		res.cookie(REFRESH_TOKEN_NAME, refreshToken, {
 			httpOnly,
@@ -126,8 +127,8 @@ export class AuthService {
 	}
 
 	removeRefreshTokenFromResponse(res: Response) {
-		const { DOMAIN: domain, IS_DEV, REFRESH_TOKEN_NAME } = this,
-			sameSite = IS_DEV ? 'none' : 'lax',
+		const { DOMAIN: domain, REFRESH_TOKEN_NAME } = this,
+			sameSite = isDev(this.configService) ? 'none' : 'lax',
 			secure = true,
 			expires = new Date(),
 			httpOnly = true

@@ -14,7 +14,7 @@ export class OnlyAdminGuard implements CanActivate {
 			user = request.user as User
 
 		if (user.role !== Role.ADMIN)
-			throw new ForbiddenException('У тебя нет прав!')
+			throw new ForbiddenException('You have no rights!')
 
 		return true
 	}
