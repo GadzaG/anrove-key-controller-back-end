@@ -1,10 +1,7 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common'
 import { Key } from '@prisma/client'
-import { time } from 'console'
 import * as crypto from 'crypto'
 import { PrismaService } from 'src/prisma.service'
-import { decrypt } from 'src/utils/decrypt'
-import { encrypt } from 'src/utils/encrypt'
 import { KeyCheckDto, KeyDto } from './key.dto'
 
 @Injectable()
@@ -53,34 +50,28 @@ export class KeyService {
 	}
 
 	async keyCheck({ userID, data }: KeyCheckDto) {
-		console.log('userID\t' + userID)
-		console.log('data\t' + data)
-
-		const user = await this.prisma.user.findUnique({
-			where: {
-				id: userID
-			}
-		})
-
-		if (!user) {
-			throw new Error('User not found')
-		}
-
-		const decryptedData: Object = decrypt(data, user.secret_key)
-		console.log(decryptedData)
-
-		const key = await this.prisma.key.findUnique({
-			where: {
-				key: decryptedData['key']
-			}
-		})
-
-		if (!key) return { response: encrypt('key not found', user.secret_key) }
-
-		if (key.status == 'FREE') {
-			key.status = 'BUSY'
-			key.startAt = time.now()
-			key.endAt = product.subscriptionTime
-		}
+		// console.log('userID\t' + userID)
+		// console.log('data\t' + data)
+		// const user = await this.prisma.user.findUnique({
+		// 	where: {
+		// 		id: userID
+		// 	}
+		// })
+		// if (!user) {
+		// 	throw new Error('User not found')
+		// }
+		// const decryptedData: Object = decrypt(data, user.secret_key)
+		// console.log(decryptedData)
+		// const key = await this.prisma.key.findUnique({
+		// 	where: {
+		// 		key: decryptedData['key']
+		// 	}
+		// })
+		// if (!key) return { response: encrypt('key not found', user.secret_key) }
+		// if (key.status == 'FREE') {
+		// 	key.status = 'BUSY'
+		// 	key.startAt = time.now()
+		// 	key.endAt = product.subscriptionTime
+		// }
 	}
 }
