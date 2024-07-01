@@ -6,6 +6,7 @@ import { GlobalModule } from './global/global.module'
 import { KeyModule } from './key/key.module'
 import { ProductModule } from './product/product.module'
 import { UserModule } from './user/user.module'
+import { ApiModule } from './api/api.module';
 
 @Module({
 	imports: [
@@ -18,7 +19,8 @@ import { UserModule } from './user/user.module'
 		UserModule,
 		ProductModule,
 		KeyModule,
-		GlobalModule
+		GlobalModule,
+		ApiModule
 	]
 })
 export class AppModule {}
