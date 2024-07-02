@@ -6,11 +6,13 @@ import {
 	HttpCode,
 	Param,
 	Post,
+	Query,
 	UsePipes,
 	ValidationPipe
 } from '@nestjs/common'
 import { ApiDto } from 'src/api/api.dto'
 import { Auth } from 'src/auth/decorators/auth.decorator'
+import { PaginationArgsWithSearchTerm } from 'src/base/pagination/pagination.args'
 import { KeyDto } from './key.dto'
 import { KeyService } from './key.service'
 
@@ -20,8 +22,11 @@ export class KeyController {
 
 	@Get('get-all/:productID')
 	@Auth()
-	async getAll(@Param('productID') productID: string) {
-		return await this.keyService.getAll(productID)
+	async getAll(
+		@Param('productID') productID: string,
+		@Query() params: PaginationArgsWithSearchTerm
+	) {
+		return await this.keyService.getAll(productID, params)
 	}
 
 	@Delete('delete')

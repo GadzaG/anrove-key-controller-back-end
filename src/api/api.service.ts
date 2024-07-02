@@ -11,14 +11,14 @@ export class ApiService {
 	) {}
 
 	async keyCheck(dto: ApiDto) {
-		return this.keyService.keyCheck(dto)
+		return await this.keyService.keyCheck(dto)
 	}
 
 	async getGlobal(dto: ApiDto) {
-		return this.globalService.getGlobal(dto)
+		return await this.globalService.getGlobal(dto)
 	}
 
 	async addJson(dto: ApiDto) {
-		return this.keyService.addJson(dto)
+		return await this.keyService.addJson(dto)
 	}
 }

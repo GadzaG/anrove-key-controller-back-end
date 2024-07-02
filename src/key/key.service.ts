@@ -1,7 +1,9 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common'
+import { Injectable, Logger, NotFoundException } from '@nestjs/common'
 import { Key } from '@prisma/client'
 import * as crypto from 'crypto'
 import { ApiDto } from 'src/api/api.dto'
+import { isHasMorePagination } from 'src/base/pagination/is-has-more'
+import { PaginationArgsWithSearchTerm } from 'src/base/pagination/pagination.args'
 import { PrismaService } from 'src/prisma.service'
 import { KeyDto } from './key.dto'
 
@@ -10,14 +12,29 @@ export class KeyService {
 	constructor(private prisma: PrismaService) {}
 	logger = new Logger()
 
-	async getAll(productID: string): Promise<Key[]> {
+	async getAll(
+		productID: string,
+		args?: PaginationArgsWithSearchTerm
+	): Promise<{ items: Key[]; isHasMore: boolean }> {
 		const keys = await this.prisma.key.findMany({
+			skip: +args?.skip,
+			take: +args?.take,
 			where: {
 				Product: { id: productID }
 			}
 		})
-		if (!keys) throw new BadRequestException('Error!')
-		return keys
+		if (!keys)
+			throw new NotFoundException('Keys not found!', {
+				cause: 'ProductId not found!',
+				description: 'Keys with this ProductId not found!'
+			})
+		const totalCount = await this.prisma.key.count({
+			where: {
+				Product: { id: productID }
+			}
+		})
+		const isHasMore = isHasMorePagination(totalCount, +args?.skip, +args.take)
+		return { items: keys, isHasMore }
 	}
 
 	async delete(keyID: string) {
