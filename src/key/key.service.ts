@@ -1,8 +1,9 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common'
 import { Key } from '@prisma/client'
 import * as crypto from 'crypto'
+import { ApiDto } from 'src/api/api.dto'
 import { PrismaService } from 'src/prisma.service'
-import { KeyCheckDto, KeyDto } from './key.dto'
+import { KeyDto } from './key.dto'
 
 @Injectable()
 export class KeyService {
@@ -49,7 +50,9 @@ export class KeyService {
 		}
 	}
 
-	async keyCheck({ userID, data }: KeyCheckDto) {
+	async addJson({ userID, data }: ApiDto) {}
+
+	async keyCheck({ userID, data }: ApiDto) {
 		// console.log('userID\t' + userID)
 		// console.log('data\t' + data)
 		// const user = await this.prisma.user.findUnique({

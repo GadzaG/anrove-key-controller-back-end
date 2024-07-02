@@ -9,8 +9,9 @@ import {
 	UsePipes,
 	ValidationPipe
 } from '@nestjs/common'
+import { ApiDto } from 'src/api/api.dto'
 import { Auth } from 'src/auth/decorators/auth.decorator'
-import { KeyCheckDto, KeyDto } from './key.dto'
+import { KeyDto } from './key.dto'
 import { KeyService } from './key.service'
 
 @Controller('key')
@@ -39,7 +40,7 @@ export class KeyController {
 
 	@Post('key-check')
 	@UsePipes(new ValidationPipe())
-	async keyCheck(@Body() dto: KeyCheckDto) {
+	async keyCheck(@Body() dto: ApiDto) {
 		return await this.keyService.keyCheck(dto)
 	}
 }

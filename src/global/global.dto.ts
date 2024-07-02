@@ -7,11 +7,3 @@ export class GlobalDto {
 	@IsString()
 	varData: string
 }
-
-export class GlobalAPIDto {
-	@IsString()
-	userID: string
-
-	@IsString()
-	varName: string
-}

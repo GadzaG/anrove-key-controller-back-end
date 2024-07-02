@@ -3,8 +3,9 @@ import {
 	Injectable,
 	NotFoundException
 } from '@nestjs/common'
+import { ApiDto } from 'src/api/api.dto'
 import { PrismaService } from 'src/prisma.service'
-import { GlobalAPIDto, GlobalDto } from './global.dto'
+import { GlobalDto } from './global.dto'
 
 interface IExistingGlobals {
 	id: string
@@ -16,17 +17,17 @@ interface IExistingGlobals {
 export class GlobalService {
 	constructor(private prisma: PrismaService) {}
 
-	async getGlobal({ userID, varName }: GlobalAPIDto) {
-		const result = await this.prisma.global.findMany({
-			where: {
-				varName
-			},
-			select: {
-				varData: true
-			}
-		})
-		if (!result) throw new NotFoundException('key not found')
-		return result
+	async getGlobal(dto: ApiDto) {
+		// const result = await this.prisma.global.findMany({
+		// 	where: {
+		// 		varName
+		// 	},
+		// 	select: {
+		// 		varData: true
+		// 	}
+		// })
+		// if (!result) throw new NotFoundException('key not found')
+		// return result
 	}
 
 	async getGlobals(id: string) {
@@ -78,7 +79,7 @@ export class GlobalService {
 		return updatedGlobal
 	}
 
-	async deleteGlobal({ varName }: Pick<GlobalAPIDto, 'varName'>, id: string) {
+	async deleteGlobal({ varName }: Pick<GlobalDto, 'varName'>, id: string) {
 		try {
 			const existingGlobal = await this.existingGlobals({
 				id,
