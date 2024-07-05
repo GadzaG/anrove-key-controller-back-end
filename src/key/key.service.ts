@@ -12,7 +12,7 @@ export class KeyService {
 	constructor(private prisma: PrismaService) {}
 	logger = new Logger()
 
-	async getAll(
+	public async getAll(
 		productID: string,
 		args?: PaginationArgsWithSearchTerm
 	): Promise<{ items: Key[]; isHasMore: boolean }> {
@@ -37,7 +37,7 @@ export class KeyService {
 		return { items: keys, isHasMore }
 	}
 
-	async delete(keyID: string) {
+	public async delete(keyID: string) {
 		await this.prisma.key.delete({
 			where: {
 				id: keyID
@@ -45,7 +45,7 @@ export class KeyService {
 		})
 	}
 
-	async create({ keyCount, productID }: KeyDto) {
+	public async create({ keyCount, productID }: KeyDto) {
 		try {
 			for (let i = 0; i < keyCount; i++) {
 				const key = crypto.randomBytes(16).toString('hex')
@@ -67,9 +67,9 @@ export class KeyService {
 		}
 	}
 
-	async addJson({ userID, data }: ApiDto) {}
+	public async addJson({ userID, data }: ApiDto) {}
 
-	async keyCheck({ userID, data }: ApiDto) {
+	public async keyCheck({ userID, data }: ApiDto) {
 		// console.log('userID\t' + userID)
 		// console.log('data\t' + data)
 		// const user = await this.prisma.user.findUnique({

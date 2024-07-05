@@ -11,22 +11,23 @@ import { userOutput } from './user.output'
 export class UserService {
 	constructor(private readonly prisma: PrismaService) {}
 
-	async getUsers(): Promise<User[]> {
+	public async getUsers(): Promise<User[]> {
 		const users = await this.prisma.user.findMany()
 		if (!users) throw new BadRequestException('Error!')
 		return users
 	}
 
-	async getById(id: string) {
-		return await this.prisma.user.findUnique({
+	public async getById(id: string) {
+		const user = await this.prisma.user.findUnique({
 			where: {
 				id
 			},
 			select: userOutput
 		})
+		return user
 	}
 
-	async getByEmail(email: string) {
+	public async getByEmail(email: string) {
 		return await this.prisma.user.findUnique({
 			where: {
 				email
@@ -34,18 +35,18 @@ export class UserService {
 		})
 	}
 
-	async create({ email, name, password }: AuthDto) {
+	public async create({ email, name, password }: AuthDto) {
 		return await this.prisma.user.create({
 			data: {
 				email,
 				name: name ? name : '',
 				password: await hash(password),
-				secret_key: await randomBytes(16).toString('hex')
+				secret_key: randomBytes(16).toString('hex')
 			}
 		})
 	}
 
-	async deleteUser() {
+	public async deleteUser() {
 		try {
 			await this.prisma.user.deleteMany()
 			return true
@@ -54,7 +55,7 @@ export class UserService {
 		}
 	}
 
-	async switchRole(userId: string) {
+	public async switchRole(userId: string) {
 		const { id, role } = await this.getById(userId)
 		const { role: switchedRole } = await this.prisma.user.update({
 			where: { id },

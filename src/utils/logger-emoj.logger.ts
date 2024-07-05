@@ -1,21 +1,21 @@
 import { LoggerService } from '@nestjs/common'
-import { bgBlue, bgYellow, black, blue, bold, gray, red } from 'chalk'
+import { bgBlue, bgYellow, black, blue, bold, gray, red, white } from 'chalk'
 
 export class EmojiLogger implements LoggerService {
-	log(message: string) {
+	public log(message: string) {
 		this.writeToFile(gray('📢 ' + message))
 	}
 
-	error(message: string, trace: string) {
+	public error(message: string, trace: string) {
 		this.writeToFile(red('❌ ' + message))
 		this.writeToFile('🔍 Stack Trace: ' + trace)
 	}
 
-	warn(message: string) {
+	public warn(message: string) {
 		this.writeToFile(bgYellow(black('⚠️ ' + message)))
 	}
 
-	debug(message: string) {
+	public debug(message: string) {
 		this.writeToFile(blue('🐞 ' + message))
 	}
 
@@ -24,5 +24,5 @@ export class EmojiLogger implements LoggerService {
 	}
 }
 export function listenerColorize(text: string): string {
-	return bgBlue(black(bold(text)))
+	return bgBlue(black(bold(white(text))))
 }

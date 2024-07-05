@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common'
 import * as dayjs from 'dayjs'
 import { PrismaService } from 'src/prisma.service'
+
 @Injectable()
 export class StatisticsService {
 	constructor(private readonly prisma: PrismaService) {}
-	async getUserRegistrationsByMonth(): Promise<
+	public async getUserRegistrationsByMonth(): Promise<
 		{ month: string; year: number; count: number }[]
 	> {
 		const currentMonth = new Date().getMonth() // Текущий месяц (от 0 до 11)
@@ -63,7 +64,7 @@ export class StatisticsService {
 		return returnedMonths
 	}
 
-	async getNumbers(): Promise<{ name: string; value: number }[]> {
+	public async getNumbers(): Promise<{ name: string; value: number }[]> {
 		const usersCount = await this.prisma.user.count()
 
 		const activeUsersCount = await this.prisma.user.count({

@@ -23,12 +23,12 @@ export class AuthService {
 		private readonly userService: UserService,
 		private readonly configService: ConfigService
 	) {}
-	DOMAIN = this.configService.get<string>('DOMAIN')
-	logger = new Logger()
-	EXPIRE_DAY_REFRESH_TOKEN = 1
-	REFRESH_TOKEN_NAME = 'refreshToken'
+	private DOMAIN = this.configService.get<string>('DOMAIN')
+	private logger = new Logger()
+	public EXPIRE_DAY_REFRESH_TOKEN = 1
+	public REFRESH_TOKEN_NAME = 'refreshToken'
 
-	async login(dto: AuthDto) {
+	public async login(dto: AuthDto) {
 		const user = await this.validateUser(dto),
 			tokens = await this.issueTokens({
 				email: user.email,
@@ -42,7 +42,7 @@ export class AuthService {
 		}
 	}
 
-	async register(dto: AuthDto) {
+	public async register(dto: AuthDto) {
 		const oldUser = await this.userService.getByEmail(dto.email)
 
 		if (oldUser) throw new BadRequestException('User already exists')
@@ -60,7 +60,7 @@ export class AuthService {
 		}
 	}
 
-	async getNewTokens(refreshToken: string) {
+	public async getNewTokens(refreshToken: string) {
 		const result = await this.jwt.verifyAsync(refreshToken)
 		if (!result) throw new UnauthorizedException('Invalid refresh token')
 		const user = await this.userService.getById(result.id),
@@ -108,7 +108,7 @@ export class AuthService {
 		return user
 	}
 
-	addRefreshTokenToResponse(res: Response, refreshToken: string) {
+	public addRefreshTokenToResponse(res: Response, refreshToken: string) {
 		const expires = new Date(),
 			{ DOMAIN: domain, REFRESH_TOKEN_NAME } = this,
 			httpOnly = true,
@@ -126,7 +126,7 @@ export class AuthService {
 		})
 	}
 
-	removeRefreshTokenFromResponse(res: Response) {
+	public removeRefreshTokenFromResponse(res: Response) {
 		const { DOMAIN: domain, REFRESH_TOKEN_NAME } = this,
 			sameSite = isDev(this.configService) ? 'none' : 'lax',
 			secure = true,
