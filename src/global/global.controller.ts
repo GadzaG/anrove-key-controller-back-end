@@ -1,16 +1,16 @@
 import {
 	Body,
 	Controller,
-	Delete,
 	Get,
 	Post,
 	Put,
 	UsePipes,
 	ValidationPipe
 } from '@nestjs/common'
+import { ApiDto } from 'src/api/api.dto'
 import { Auth } from 'src/auth/decorators/auth.decorator'
 import { CurrentUser } from 'src/auth/decorators/user.decorator'
-import { GlobalAPIDto, GlobalDto } from './global.dto'
+import { GlobalDto } from './global.dto'
 import { GlobalService } from './global.service'
 
 @Controller('global')
@@ -20,7 +20,7 @@ export class GlobalController {
 	// API
 	@Post('get-global')
 	@UsePipes(new ValidationPipe())
-	async getGlobal(@Body() dto: GlobalAPIDto) {
+	async getGlobal(@Body() dto: ApiDto) {
 		return this.globalService.getGlobal(dto)
 	}
 
@@ -47,14 +47,14 @@ export class GlobalController {
 		return this.globalService.changeGlobal(dto, id)
 	}
 
-	@Delete('delete-global')
-	@Auth()
-	@UsePipes(new ValidationPipe())
-	async deleteGlobal(
-		@Body() dto: Pick<GlobalAPIDto, 'varName'>,
-		@CurrentUser('id') id: string
-	) {
-		await this.globalService.deleteGlobal(dto, id)
-		return true
-	}
+	// @Delete('delete-global')
+	// @Auth()
+	// @UsePipes(new ValidationPipe())
+	// async deleteGlobal(
+	// 	@Body() dto: Pick<ApiDto, 'data'>,
+	// 	@CurrentUser('id') id: string
+	// ) {
+	// 	await this.globalService.deleteGlobal(dto, id)
+	// 	return true
+	// }
 }

@@ -17,7 +17,7 @@ interface IExistingGlobals {
 export class GlobalService {
 	constructor(private prisma: PrismaService) {}
 
-	async getGlobal(dto: ApiDto) {
+	public async getGlobal(dto: ApiDto) {
 		// const result = await this.prisma.global.findMany({
 		// 	where: {
 		// 		varName
@@ -30,7 +30,7 @@ export class GlobalService {
 		// return result
 	}
 
-	async getGlobals(id: string) {
+	public async getGlobals(id: string) {
 		const result = await this.prisma.global.findMany({
 			where: {
 				userID: id
@@ -42,7 +42,7 @@ export class GlobalService {
 		return result
 	}
 
-	async createGlobal({ varName, varData }: GlobalDto, id: string) {
+	public async createGlobal({ varName, varData }: GlobalDto, id: string) {
 		await this.existingGlobals({ id, varName, optional: true })
 
 		const newGlobal = await this.prisma.global.create({
@@ -60,7 +60,7 @@ export class GlobalService {
 		return newGlobal
 	}
 
-	async changeGlobal({ varName, varData }: GlobalDto, id: string) {
+	public async changeGlobal({ varName, varData }: GlobalDto, id: string) {
 		const existingGlobal = await this.existingGlobals({
 			id,
 			varName,
@@ -79,7 +79,10 @@ export class GlobalService {
 		return updatedGlobal
 	}
 
-	async deleteGlobal({ varName }: Pick<GlobalDto, 'varName'>, id: string) {
+	public async deleteGlobal(
+		{ varName }: Pick<GlobalDto, 'varName'>,
+		id: string
+	) {
 		try {
 			const existingGlobal = await this.existingGlobals({
 				id,
@@ -98,7 +101,7 @@ export class GlobalService {
 	}
 
 	// TOOLS
-	async existingGlobals({ id, optional, varName }: IExistingGlobals) {
+	public async existingGlobals({ id, optional, varName }: IExistingGlobals) {
 		const existingGlobal = await this.prisma.global.findFirst({
 			where: {
 				userID: id,
